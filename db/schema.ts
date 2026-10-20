@@ -1,0 +1,12 @@
+import {sql} from 'drizzle-orm';
+import {sqliteTable,text,integer,index,uniqueIndex,check} from 'drizzle-orm/sqlite-core';
+export const products=sqliteTable('products',{id:text('id').primaryKey(),slug:text('slug').notNull().unique(),draft:text('draft').notNull(),published:text('published'),revision:integer('revision').notNull().default(1)});
+export const settings=sqliteTable('settings',{id:text('id').primaryKey(),value:text('value').notNull(),revision:integer('revision').notNull().default(1)});
+export const history=sqliteTable('history',{id:text('id').primaryKey(),productId:text('product_id').notNull(),pageId:text('page_id').notNull(),page:text('page').notNull(),created:text('created').notNull(),reason:text('reason').notNull()},t=>[index('history_product_page').on(t.productId,t.pageId)]);
+export const media=sqliteTable('media',{id:text('id').primaryKey(),productId:text('product_id').notNull(),name:text('name').notNull(),mime:text('mime').notNull(),size:integer('size').notNull(),created:text('created').notNull()},t=>[index('media_product').on(t.productId)]);
+export const sessions=sqliteTable('sessions',{token:text('token').primaryKey(),expires:integer('expires').notNull()});
+export const attempts=sqliteTable('attempts',{ip:text('ip').primaryKey(),count:integer('count').notNull(),reset:integer('reset').notNull()});
+
+export const versions=sqliteTable('versions',{id:text('id').primaryKey(),productId:text('product_id').notNull().references(()=>products.id,{onDelete:'cascade'}),label:text('label').notNull(),slug:text('slug').notNull(),snapshot:text('snapshot').notNull(),created:text('created').notNull()},t=>[uniqueIndex('versions_product_slug').on(t.productId,t.slug)]);
+export const feedback=sqliteTable('feedback',{id:text('id').primaryKey(),productId:text('product_id').notNull().references(()=>products.id,{onDelete:'cascade'}),pageId:text('page_id').notNull(),version:text('version').notNull().default(''),helpful:integer('helpful').notNull(),comment:text('comment').notNull().default(''),visitor:text('visitor').notNull(),created:text('created').notNull()},t=>[uniqueIndex('feedback_visitor_page').on(t.productId,t.pageId,t.version,t.visitor),index('feedback_product').on(t.productId,t.created),check('feedback_helpful',sql`${t.helpful} IN (0,1)`)]);
+export const feedbackLimits=sqliteTable('feedback_limits',{key:text('key').primaryKey(),count:integer('count').notNull(),reset:integer('reset').notNull()});

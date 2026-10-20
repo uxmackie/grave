@@ -1,0 +1,4 @@
+import {publishedProducts} from '@/lib/public-documents';
+import {readerPath} from '@/lib/reader-tools';
+const escape=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
+export async function GET(req:Request){const origin=new URL(req.url).origin;const products=await publishedProducts();const urls=[{path:'/',updated:undefined as string|undefined},...products.flatMap(p=>[{path:readerPath(p),updated:undefined},...p.pages.map(page=>({path:readerPath(p,page),updated:page.updatedAt}))])];return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+urls.map(u=>'<url><loc>'+escape(origin+u.path)+'</loc>'+(u.updated&&!isNaN(Date.parse(u.updated))?'<lastmod>'+new Date(u.updated).toISOString()+'</lastmod>':'')+'</url>').join('')+'</urlset>',{headers:{'Content-Type':'application/xml; charset=utf-8'}});}

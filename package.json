@@ -1,0 +1,77 @@
+{
+  "name": "grave",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "install:ci": "node scripts/install-ci.mjs",
+    "dev": "node scripts/run-framework.mjs dev",
+    "build": "node scripts/run-framework.mjs build",
+    "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "db:generate": "drizzle-kit generate",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:mdx": "node --experimental-strip-types --test tests/mdx.test.mjs",
+    "setup:local": "node scripts/setup-local.mjs",
+    "db:migrate:local": "node scripts/migrate-local.mjs",
+    "prestart": "node scripts/migrate-local.mjs"
+  },
+  "dependencies": {
+    "@fortawesome/free-brands-svg-icons": "^6.7.2",
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@twemoji/parser": "^17.0.2",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "drizzle-orm": "0.45.2",
+    "jszip": "^3.10.1",
+    "lucide-react": "^1.31.0",
+    "matter-js": "^0.20.0",
+    "mermaid": "^11.12.0",
+    "next": "16.3.4",
+    "prismjs": "^1.30.0",
+    "radix-ui": "^1.6.7",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-mdx": "^3.1.0",
+    "remark-parse": "^11.0.0",
+    "tailwind-merge": "3.6.0",
+    "unified": "^11.0.5",
+    "yaml": "^2.8.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.37.1",
+    "@cloudflare/workers-types": "4.20260515.1",
+    "@tailwindcss/postcss": "4.2.1",
+    "@types/matter-js": "^0.19.8",
+    "@types/node": "22.19.19",
+    "@types/prismjs": "^1.26.5",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.3.4",
+    "json-rpc-2.0": "1.7.1",
+    "raw-body": "3.0.2",
+    "react-server-dom-webpack": "19.2.6",
+    "tailwindcss": "4.2.1",
+    "typescript": "5.9.3",
+    "vinext": "1.0.0-beta.5",
+    "vite": "8.0.13",
+    "wrangler": "4.92.0"
+  },
+  "type": "module",
+  "overrides": {
+    "miniflare": {
+      "sharp": "0.35.4"
+    }
+  }
+}

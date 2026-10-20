@@ -1,0 +1,2 @@
+import {db,json,handle,requireEditor} from '@/lib/server';
+export async function GET(req:Request,{params}:{params:Promise<{id:string}>}){return handle(async()=>{await requireEditor(req);const {id}=await params;const pageId=new URL(req.url).searchParams.get('page');const {results}=await db().prepare('SELECT * FROM history WHERE product_id=? AND page_id=? ORDER BY created DESC LIMIT 100').bind(id,pageId).all();return json(results.map(r=>({...r,page:JSON.parse(r.page as string)})));});}

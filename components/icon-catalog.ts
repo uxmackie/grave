@@ -1,0 +1,10 @@
+import * as solid from '@fortawesome/free-solid-svg-icons';
+import * as regular from '@fortawesome/free-regular-svg-icons';
+import * as brands from '@fortawesome/free-brands-svg-icons';
+import {customIcons} from './icon-custom';
+type Definition={iconName:string;icon:[number,number,unknown,string,string|string[]]};
+const sets:Record<string,Record<string,unknown>>={solid,regular,brands};
+const seenIcons=new Set<string>();
+const catalog=Object.entries(sets).flatMap(([style,set])=>Object.values(set).filter((x):x is Definition=>!!x&&typeof x==='object'&&'iconName' in x&&'icon' in x).map(icon=>({style,icon})));
+const custom=customIcons.flatMap(x=>x.styles.map(style=>({style,icon:{iconName:x.iconName,icon:x.icon}})));
+export const allIcons=[...catalog,...custom].filter(x=>{const key=x.style+':'+x.icon.iconName;if(seenIcons.has(key))return false;seenIcons.add(key);return true;});

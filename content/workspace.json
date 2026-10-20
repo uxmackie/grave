@@ -1,0 +1,14 @@
+{
+  "name": "Grave",
+  "logoLight": "/brand/wordmark-light.svg",
+  "logoDark": "/brand/wordmark-dark.svg",
+  "announcement": "Meet your documentation’s new home.",
+  "announcementUrl": "/grave/introduction",
+  "theme": "system",
+  "links": [
+    {
+      "title": "Changelog",
+      "href": "/grave/changelog"
+    }
+  ]
+}

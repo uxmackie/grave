@@ -1,0 +1,89 @@
+{
+  "id": "6f188f61-70d3-4288-92e6-988dff1caf06",
+  "name": "pwned",
+  "slug": "pwned",
+  "description": "The home for all free media",
+  "icon": {
+    "name": "code",
+    "style": "solid"
+  },
+  "accent": "#8cff00",
+  "visible": true,
+  "nav": [
+    {
+      "id": "94f04278-13a9-4bea-ac9c-af96680376cc",
+      "type": "group",
+      "title": "Wiki",
+      "children": [
+        {
+          "id": "1c5fce3a-ce1c-4899-b3a3-6d440203a050",
+          "type": "page",
+          "title": "Adblocking / Privacy",
+          "pageId": "72883f1e-f437-453b-badf-3ea3b3f0f6bb",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "home": {
+    "enabled": true,
+    "eyebrow": "ALL ABOARD!",
+    "title": "Home of all free media",
+    "description": "Free media? heck yeah!",
+    "button": "Get started",
+    "start": "",
+    "featured": []
+  },
+  "message": {
+    "icon": {
+      "name": "circle-info",
+      "style": "solid"
+    },
+    "title": "Emoji Legends",
+    "description": "🌐  Indexes \n🔁  Section Links \n⭐  Recommendations",
+    "href": ""
+  },
+  "linkStyle": "accent-hover",
+  "revision": 2055,
+  "pages": [
+    {
+      "id": "20dc9e2c-bed6-45c0-8a18-383b872f6661",
+      "title": "Beginner's Guide",
+      "slug": "beginners-guide",
+      "description": "A Guide for Beginners + FAQs",
+      "icon": {
+        "name": "book",
+        "style": "solid"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-20dc9e2c-bed6-45c0-8a18-383b872f6661.mdx"
+    },
+    {
+      "id": "1fa3ee50-4bc0-4437-9aed-68d0d1222f41",
+      "title": "Unsafe Sites",
+      "slug": "unsafe-sites",
+      "description": "Unsafe/harmful sites to avoid.",
+      "icon": {
+        "name": "triangle-exclamation",
+        "style": "solid"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-1fa3ee50-4bc0-4437-9aed-68d0d1222f41.mdx"
+    },
+    {
+      "id": "72883f1e-f437-453b-badf-3ea3b3f0f6bb",
+      "title": "Adblocking / Privacy",
+      "slug": "adblocking-privacy",
+      "description": "Adblocking, Privacy, VPNs, Proxies and Antiviruses",
+      "icon": {
+        "name": "shield-halved",
+        "style": "solid"
+      },
+      "hidden": false,
+      "draft": true,
+      "file": "pages/page-72883f1e-f437-453b-badf-3ea3b3f0f6bb.mdx"
+    }
+  ]
+}

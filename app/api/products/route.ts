@@ -1,0 +1,4 @@
+import {withContentFiles} from '@/lib/content-files';
+import {db,json,handle,requireEditor} from '@/lib/server';
+import {newProduct} from '@/lib/model';
+export async function POST(req:Request){return handle(async()=>{await requireEditor(req);const {name}=await req.json() as {name:string};const p=newProduct(name);if(!p.slug)return json({error:'Enter a product name.'},400);const collision=await db().prepare("SELECT id FROM products WHERE slug=? OR json_extract(published,'$.slug')=? OR EXISTS(SELECT 1 FROM json_each(json_extract(published,'$.aliases')) WHERE value=?)").bind(p.slug,p.slug,p.slug).first();if(collision)return json({error:'A product with this slug already exists. Choose a different name.'},422);await db().prepare('INSERT INTO products(id,slug,draft) VALUES(?,?,?)').bind(p.id,p.slug,JSON.stringify(p)).run();return withContentFiles(req,json({id:p.id,revision:1,draft:p,published:null},201));});}

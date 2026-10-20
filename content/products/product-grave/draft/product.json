@@ -1,0 +1,232 @@
+{
+  "id": "grave",
+  "name": "Grave",
+  "slug": "grave",
+  "description": "Create documentation people love to read.",
+  "icon": {
+    "name": "star",
+    "style": "solid"
+  },
+  "accent": "#383838",
+  "visible": true,
+  "nav": [
+    {
+      "id": "guides",
+      "title": "Guides",
+      "type": "tab",
+      "children": [
+        {
+          "id": "get-started",
+          "title": "Get started",
+          "type": "group",
+          "children": [
+            {
+              "id": "nav-0",
+              "title": "Introduction",
+              "type": "page",
+              "pageId": "page-0",
+              "children": []
+            },
+            {
+              "id": "nav-1",
+              "title": "Quickstart",
+              "type": "page",
+              "pageId": "page-1",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "create",
+          "title": "Build your docs",
+          "type": "group",
+          "children": [
+            {
+              "id": "nav-2",
+              "title": "Components",
+              "type": "page",
+              "pageId": "page-2",
+              "children": []
+            },
+            {
+              "id": "nav-3",
+              "title": "Navigation",
+              "type": "page",
+              "pageId": "page-3",
+              "children": []
+            },
+            {
+              "id": "nav-4",
+              "title": "Publishing",
+              "type": "page",
+              "pageId": "page-4",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "resources",
+          "title": "Resources",
+          "type": "group",
+          "children": [
+            {
+              "id": "nav-5",
+              "title": "Troubleshooting",
+              "type": "page",
+              "pageId": "page-5",
+              "children": []
+            },
+            {
+              "id": "nav-7",
+              "title": "Changelog",
+              "type": "page",
+              "pageId": "page-7",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "title": "API reference",
+      "type": "tab",
+      "children": [
+        {
+          "id": "api-basics",
+          "title": "API basics",
+          "type": "group",
+          "children": [
+            {
+              "id": "nav-6",
+              "title": "API overview",
+              "type": "page",
+              "pageId": "page-6",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "home": {
+    "enabled": true,
+    "eyebrow": "DOCUMENTATION",
+    "title": "Good documentation.\nGreat beginnings.",
+    "description": "Your guide to creating, organizing, and publishing beautiful documentation with Grave.",
+    "button": "Get started",
+    "start": "page-1",
+    "featured": [
+      "page-0",
+      "page-1",
+      "page-2"
+    ]
+  },
+  "message": {
+    "icon": {
+      "name": "life-ring"
+    },
+    "title": "Need a hand?",
+    "description": "Find answers in the troubleshooting guide.",
+    "href": "/grave/troubleshooting"
+  },
+  "revision": 14,
+  "pages": [
+    {
+      "id": "page-0",
+      "title": "Introduction",
+      "slug": "introduction",
+      "description": "A home for your knowledge.",
+      "icon": {
+        "name": "book-open"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-page-0.mdx"
+    },
+    {
+      "id": "page-1",
+      "title": "Quickstart",
+      "slug": "quickstart",
+      "description": "Your first page, from idea to published.",
+      "icon": {
+        "name": "bolt"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-page-1.mdx"
+    },
+    {
+      "id": "page-2",
+      "title": "Components",
+      "slug": "components",
+      "description": "Useful building blocks for clearer explanations.",
+      "icon": {
+        "name": "layer-group"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-page-2.mdx"
+    },
+    {
+      "id": "page-3",
+      "title": "Navigation",
+      "slug": "navigation",
+      "description": "Give every page a place to belong.",
+      "icon": {
+        "name": "compass"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-page-3.mdx"
+    },
+    {
+      "id": "page-4",
+      "title": "Publishing",
+      "slug": "publishing",
+      "description": "Review your changes and share with confidence.",
+      "icon": {
+        "name": "paper-plane"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-page-4.mdx"
+    },
+    {
+      "id": "page-5",
+      "title": "Troubleshooting",
+      "slug": "troubleshooting",
+      "description": "Get unstuck and keep moving.",
+      "icon": {
+        "name": "life-ring"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-page-5.mdx"
+    },
+    {
+      "id": "page-6",
+      "title": "API overview",
+      "slug": "api-overview",
+      "description": "Understand the shape of your API documentation.",
+      "icon": {
+        "name": "code"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-page-6.mdx"
+    },
+    {
+      "id": "page-7",
+      "title": "Changelog",
+      "slug": "changelog",
+      "description": "Follow the latest improvements.",
+      "icon": {
+        "name": "clock"
+      },
+      "hidden": false,
+      "draft": false,
+      "file": "pages/page-page-7.mdx"
+    }
+  ]
+}

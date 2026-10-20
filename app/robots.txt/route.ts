@@ -1,0 +1,1 @@
+export function GET(req:Request){return new Response('User-agent: *\nAllow: /\nDisallow: /editor\nDisallow: /api/\nSitemap: '+new URL('/sitemap.xml',req.url).href+'\n',{headers:{'Content-Type':'text/plain; charset=utf-8'}});}

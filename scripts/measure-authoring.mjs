@@ -1,0 +1,16 @@
+import {performance} from 'node:perf_hooks';
+import {writeFileSync} from 'node:fs';
+import {parse,headings,textOf} from '../lib/mdx.ts';
+const source=Array.from({length:120},(_,i)=>`## Section ${i}\n\nA **formatted** paragraph with [documentation](/grave/introduction).\n\n- First item\n- Second item\n\n<Callout type="info">\nUseful context.\n</Callout>\n`).join('\n');
+const runs=5;
+const timed=fn=>{const start=performance.now();for(let i=0;i<runs;i++)fn();return Math.round((performance.now()-start)/runs*100)/100;};
+parse(source);
+const repeatedParse=timed(()=>{parse(source);headings(source);});
+const sharedTree=timed(()=>{const tree=parse(source).tree;headings(source,tree);});
+const cached=parse(source).tree;
+const query='documentation';
+const reparseSearch=timed(()=>textOf(parse(source).tree).toLowerCase().includes(query));
+const cachedText=textOf(cached).toLowerCase();
+const cachedSearch=timed(()=>cachedText.includes(query));
+const report={fixtureBytes:Buffer.byteLength(source),sections:120,runs,averageMs:{parseAndHeadingsBefore:repeatedParse,parseAndHeadingsAfter:sharedTree,searchWithReparse:reparseSearch,searchWithCachedText:cachedSearch},note:'Node microbenchmark, not a browser rendering or network measurement.'};
+writeFileSync(new URL('../tests/performance-results.json',import.meta.url),JSON.stringify(report,null,2)+'\n');console.log(report);

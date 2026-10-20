@@ -1,0 +1,5 @@
+import {withContentFiles} from '@/lib/content-files';
+import {publishProduct,readProduct,type Database} from '@/lib/store';
+import {db,json,handle,requireEditor,productErrors} from '@/lib/server';
+import type {Product} from '@/lib/model';
+export async function POST(req:Request,{params}:{params:Promise<{id:string}>}){return handle(async()=>{await requireEditor(req);const {id}=await params;const {revision}=await req.json() as {revision:number};const row=await db().prepare('SELECT draft,revision FROM products WHERE id=?').bind(id).first<{draft:string;revision:number}>();if(!row)return json({error:'Product not found.'},404);if(row.revision!==revision)return json({error:'Draft changed. Save and review again.'},409);const p=JSON.parse(row.draft) as Product;const errors=productErrors(p);if(errors.length)return json({error:errors.join('\n')},422);const next=await publishProduct(db() as unknown as Database,id,revision);return withContentFiles(req,json({published:(await readProduct(db() as unknown as Database,id))!.published,revision:next}));});}
