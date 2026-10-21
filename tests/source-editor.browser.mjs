@@ -61,6 +61,16 @@ try{
   assert.ok(describedBy,'The source editor should describe its keyboard behavior');
   assert.match(await page.locator(`[id="${describedBy}"]`).innerText(),/Escape, then Tab/);
 
+  const caretSource=Array.from({length:40},(_,index)=>`line ${String(index+1).padStart(2,'0')} content`).join('\n');
+  await fill(caretSource);
+  const caretOffset=caretSource.indexOf('line 10 ')+'line 10 '.length;
+  await focusRange(caretOffset,caretOffset);
+  await page.keyboard.type('XYZ',{delay:15});
+  const typedLines=await source.inputValue();
+  assert.equal(typedLines.split('\n')[9],'line 10 XYZcontent');
+  assert.equal(typedLines.split('\n').at(-1),'line 40 content');
+  assert.equal(await source.evaluate(el=>el.value.slice(0,el.selectionStart).split('\n').length),10);
+
   await fill('alpha\nbeta');
   await focusRange(2,2);
   await page.keyboard.press('Tab');
@@ -106,6 +116,33 @@ try{
   await source.waitFor();
   assert.equal(await source.inputValue(),'## Saved\n\nAutosave check.');
 
+  const metadataSave=page.waitForResponse(response=>
+    response.request().method()==='PUT'&&response.url().endsWith('/api/products/grave')
+  );
+  await fill('---\ntitle: Renamed page\n---\n\nBody');
+  await metadataSave;
+  await page.waitForTimeout(100);
+  const renamedPage=saves.at(-1)?.draft?.pages?.find(item=>item.id===editedPage.id);
+  assert.equal(renamedPage?.title,'Renamed page');
+
+  await page.getByRole('tab',{name:'Visual',exact:true}).click();
+  const editable=page.locator('.visual-canvas [contenteditable=true][data-start]').filter({hasText:'Body'}).first();
+  await editable.waitFor();
+  await editable.evaluate(el=>{
+    el.focus();
+    const range=document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const selection=getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  });
+  await page.keyboard.type(' Added in visual mode.',{delay:15});
+  await page.waitForTimeout(100);
+  assert.equal(await editable.innerText(),'Body Added in visual mode.');
+  await page.getByRole('tab',{name:'Source',exact:true}).click();
+  assert.match(await source.inputValue(),/Body Added in visual mode\.$/);
+
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.setViewportSize({width:320,height:740});
   await page.waitForTimeout(100);
@@ -119,7 +156,7 @@ try{
   await page.screenshot({path:'.playwright/source-editor-mobile.png'});
 
   assert.deepEqual(errors,[]);
-  console.log('Source editor browser checks passed: source fidelity, Tab/Shift+Tab indentation, keyboard escape, autosave, preview, and 320px layout.');
+  console.log('Source editor browser checks passed: source fidelity, selected-line typing, Tab/Shift+Tab indentation, keyboard escape, autosave, metadata, visual typing, preview, and 320px layout.');
 }finally{
   await context.close();
   await browser.close();
