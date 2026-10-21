@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,readFile,writeFile,access,rm} from 'node:fs/promises';
-import {join,resolve} from 'node:path';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {contentFiles,writeContentSnapshot} from '../build/content-files.ts';
 import {seed,initialWorkspace} from '../lib/model.ts';
 
@@ -18,7 +19,7 @@ test('Markdown copies preserve exact MDX and keep drafts separate from publicati
 });
 
 test('snapshot writes update pages, remove only managed files and preserve unrelated files',async()=>{
- const root=await mkdtemp(resolve('.sites-runtime/content-test-'));
+ const root=await mkdtemp(join(tmpdir(),'grave-content-test-'));
  try{
   const draft=seed();const snapshot={workspace:initialWorkspace,products:[{id:draft.id,draft,published:null,revision:1}]};
   await writeContentSnapshot(root,snapshot);
@@ -42,7 +43,7 @@ test('content identities cannot create paths outside their folder',()=>{
 });
 
 test('tampered manifests cannot delete files outside content',async()=>{
- const root=await mkdtemp(resolve('.sites-runtime/content-test-'));
+ const root=await mkdtemp(join(tmpdir(),'grave-content-test-'));
  try{
   await writeFile(join(root,'.grave-files.json'),'["../outside.txt"]');
   await assert.rejects(writeContentSnapshot(root,{workspace:initialWorkspace,products:[]}),/Unsafe content path/);
