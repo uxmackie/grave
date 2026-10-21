@@ -652,9 +652,17 @@ function EditableText({
 }) {
   const focused = useRef(false),
     cached = useRef(children),
-    initial = useRef("");
+    initial = useRef(""),
+    lastRaw = useRef(raw(node, source)),
+    localRaw = useRef<string | null>(null);
   const Tag = tag as React.ElementType;
-  if (!focused.current) cached.current = children;
+  // Keep the live DOM while the user types, but refresh it when an external
+  // edit (such as inserting an inline icon) changes this block.
+  const currentRaw = raw(node, source);
+  const changed = currentRaw !== lastRaw.current;
+  lastRaw.current = currentRaw;
+  if (!focused.current || (changed && currentRaw !== localRaw.current))
+    cached.current = children;
   const commit = (element: HTMLElement) => {
     if (element.innerHTML === initial.current) return;
     let body = Array.from(element.childNodes)
@@ -663,7 +671,10 @@ function EditableText({
     if (node.type === "heading")
       body = "#".repeat(node.depth || 2) + " " + body;
     const next = replaceNode(source, node, body);
-    if (next !== source) change(next);
+    if (next !== source) {
+      localRaw.current = body;
+      change(next);
+    }
     initial.current = element.innerHTML;
   };
   return (

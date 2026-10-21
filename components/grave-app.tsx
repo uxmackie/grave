@@ -1623,6 +1623,18 @@ function Editor({
   const blocked = useRef(false);
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
+  const metadataParser = useRef<
+    ((source: string) => Record<string, unknown>) | null
+  >(null);
+  useEffect(() => {
+    let live = true;
+    import("@/lib/mdx").then(({ metadata }) => {
+      if (live) metadataParser.current = metadata;
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
   const undoStack = useRef<Product[]>([]),
     redoStack = useRef<Product[]>([]);
   const record = records.find((x) => x.id === selected),
@@ -1834,24 +1846,58 @@ function Editor({
     setPageId(next.id);
     setMobile(false);
   };
-  const patchPage = async (source: string) => {
+  const pageMetadata = (page: Page, meta: Record<string, unknown>) => {
+    const changes: Partial<Page> = {};
+    for (const key of ["title", "description", "slug"] as const)
+      if (typeof meta[key] === "string" && page[key] !== meta[key])
+        changes[key] = meta[key];
+    if (typeof meta.hidden === "boolean" && page.hidden !== meta.hidden)
+      changes.hidden = meta.hidden;
+    if (typeof meta.draft === "boolean" && page.draft !== meta.draft)
+      changes.draft = meta.draft;
+    return changes;
+  };
+  const applyMetadata = (
+    source: string,
+    metadata: (source: string) => Record<string, unknown>,
+  ) => {
+    const current = recordsRef.current.find(
+      (x) => x.id === selectedRef.current,
+    )?.draft;
+    const page = current?.pages.find((x) => x.id === pageId);
+    if (!current || !page || page.source !== source) return;
+    const changes = pageMetadata(page, metadata(source));
+    if (!Object.keys(changes).length) return;
+    change({
+      ...current,
+      pages: current.pages.map((x) =>
+        x.id === page.id ? { ...x, ...changes } : x,
+      ),
+    });
+  };
+  const patchPage = (source: string) => {
     setQualityIssue(undefined);
     const p = recordsRef.current.find(
       (x) => x.id === selectedRef.current,
     )?.draft;
     const page = p?.pages.find((x) => x.id === pageId);
     if (!p || !page) return;
-    const { metadata } = await import("@/lib/mdx");
-    const meta = metadata(source);
-    const changes: Partial<Page> = { source };
-    for (const key of ["title", "description", "slug"] as const)
-      if (typeof meta[key] === "string") changes[key] = meta[key];
-    if (typeof meta.hidden === "boolean") changes.hidden = meta.hidden;
-    if (typeof meta.draft === "boolean") changes.draft = meta.draft;
+    // Update the source synchronously so the controlled textarea keeps its
+    // caret. Metadata is applied in the same pass once the parser has loaded.
+    const metadata = metadataParser.current;
+    const changes: Partial<Page> = {
+      source,
+      ...(metadata ? pageMetadata(page, metadata(source)) : {}),
+    };
     change({
       ...p,
       pages: p.pages.map((x) => (x.id === page.id ? { ...x, ...changes } : x)),
     });
+    if (!metadata)
+      void import("@/lib/mdx").then(({ metadata }) => {
+        metadataParser.current = metadata;
+        applyMetadata(source, metadata);
+      });
   };
   const history = (redo = false) => {
     const active = document.activeElement;

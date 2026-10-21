@@ -34,9 +34,11 @@ try{
   if(item.blockPicker){await page.getByRole('button',{name:'Add a block'}).click();await page.getByRole('dialog').getByRole('button',{name:'Icon',exact:true}).click();}else await page.getByRole('button',{name:'Insert icon at cursor'}).click();
   await page.getByRole('textbox',{name:'Tooltip content (MDX)'}).fill('Two lines\n\nMore details.');
   await page.getByRole('button',{name:'Insert icon',exact:true}).click();
+  await page.locator('.visual-canvas .inline-icon').first().waitFor();
+  assert.equal(await page.locator('.visual-canvas .inline-icon').count(),1);
   await page.getByRole('tab',{name:'Source',exact:true}).click();
   const actual=await page.getByRole('textbox',{name:'MDX source',exact:true}).inputValue();
   assert.match(actual,item.expected);assert.equal((actual.match(/<Icon /g)||[]).length,1);
  }
- assert.deepEqual(errors,[]);console.log('Icon caret insertion passed for paragraphs, bold text, lists, and repeated text.');
+ assert.deepEqual(errors,[]);console.log('Icon caret insertion and immediate visual refresh passed for paragraphs, bold text, lists, and repeated text.');
 }finally{await browser.close();}
