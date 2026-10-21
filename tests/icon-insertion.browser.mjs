@@ -2,14 +2,14 @@
 // node --experimental-strip-types tests/icon-insertion.browser.mjs
 // All API traffic is mocked; no authored content is changed or published.
 import assert from 'node:assert/strict';
-import {chromium} from 'playwright';
+import {launchBrowser} from './browser-launch.mjs';
 import {seed,initialWorkspace} from '../lib/model.ts';
 const product=seed();product.pages=product.pages.slice(0,2);
 product.pages[0].description='';
 product.pages[0].source='Before middle after.';
 product.snippets.shared='<Image src="/test.png" />';
 const fixture={workspace:initialWorkspace,revision:1,products:[{id:product.id,draft:product,published:null,revision:1}]};
-const browser=await chromium.launch({headless:true,...(process.env.QUALITY_BROWSER_PATH?{executablePath:process.env.QUALITY_BROWSER_PATH}:{channel:'chrome'})});
+const browser=await launchBrowser();
 const context=await browser.newContext({viewport:{width:1280,height:900}});
 const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
 await page.route('**/api/**',route=>{

@@ -1,7 +1,7 @@
 {
   "name": "Grave",
-  "logoLight": "/brand/wordmark-light.svg",
-  "logoDark": "/brand/wordmark-dark.svg",
+  "logoLight": "/brand/wordmark-light.png",
+  "logoDark": "/brand/wordmark-dark.png",
   "announcement": "Meet your documentation’s new home.",
   "announcementUrl": "/grave/introduction",
   "theme": "system",

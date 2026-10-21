@@ -2,13 +2,13 @@
 // node --experimental-strip-types tests/reader-integration.browser.mjs
 import assert from 'node:assert/strict';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
-import {chromium} from 'playwright';
+import {launchBrowser} from './browser-launch.mjs';
 import {newPage} from '../lib/model.ts';
 const base=process.env.READER_BASE_URL||'http://127.0.0.1:5173';
 if(!['127.0.0.1','localhost'].includes(new URL(base).hostname))throw Error('This test only runs locally.');
 const vars=await readFile('.dev.vars','utf8');const password=vars.match(/^EDITOR_PASSWORD\s*=\s*(.*)$/m)?.[1]?.trim().replace(/^["']|["']$/g,'');
 if(!password)throw Error('Local editor password is required.');
-const browser=await chromium.launch({headless:true,...(process.env.QUALITY_BROWSER_PATH?{executablePath:process.env.QUALITY_BROWSER_PATH}:{channel:'chrome'})});
+const browser=await launchBrowser();
 const context=await browser.newContext({viewport:{width:1280,height:900}});const request=context.request;
 let record;let revision=1;const report={};
 const api=async(path,method='GET',data)=>{const response=await request.fetch(base+path,{method,data});const result=await response.json();assert.ok(response.ok(),path+': '+JSON.stringify(result));return result;};
