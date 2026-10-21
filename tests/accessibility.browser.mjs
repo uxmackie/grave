@@ -105,10 +105,19 @@ try {
   await editor.getByRole('tab', {name:'Visual', exact:true}).waitFor();
   await editor.waitForTimeout(600);
   const editorViolations = await audit(editor, 'editor');
+  await editor.getByRole('tab', {name:'Source', exact:true}).click();
+  await editor.getByRole('textbox', {name:'MDX source', exact:true}).waitFor();
+  await editor.waitForTimeout(300);
+  const sourceViolations = await audit(editor, 'editor source mode');
 
   console.log(JSON.stringify({
-    checks: ['reader home', 'published reader page', 'editor'],
-    violations: {home:homeViolations, reader:readerViolations, editor:editorViolations},
+    checks: ['reader home', 'published reader page', 'editor', 'editor source mode'],
+    violations: {
+      home:homeViolations,
+      reader:readerViolations,
+      editor:editorViolations,
+      source:sourceViolations,
+    },
   }, null, 2));
 } finally {
   await context.close();

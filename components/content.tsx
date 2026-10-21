@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Tabs as BaseTabs,
   TabsList,
@@ -140,6 +140,8 @@ export function SourceEditor({
 }) {
   const overlay = useRef<HTMLPreElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
+  const escaped = useRef(false);
+  const hintId = useId();
   useEffect(() => {
     if (!target) return;
     const frame = requestAnimationFrame(() => {
@@ -177,39 +179,102 @@ export function SourceEditor({
     return () => cancelAnimationFrame(frame);
   }, [target]);
   return (
-    <div className="source-editor">
-      <pre ref={overlay} aria-hidden>
-        {value.split("\n").map((line, index) => (
-          <span className="source-line" data-line={index + 1} key={index}>
-            <Highlight text={line || "\u200b"} />
-          </span>
-        ))}
-      </pre>
-      <textarea
-        ref={input}
-        wrap="soft"
-        aria-label={label}
-        spellCheck={false}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onScroll={(e) => {
-          if (overlay.current) {
-            overlay.current.scrollTop = e.currentTarget.scrollTop;
-            overlay.current.scrollLeft = e.currentTarget.scrollLeft;
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Tab") {
+    <>
+      <span id={hintId} className="sr-only">
+        Press Escape, then Tab to leave the editor. Tab indents selected
+        lines.
+      </span>
+      <div className="source-editor">
+        <pre ref={overlay} aria-hidden>
+          {value.split("\n").map((line, index) => (
+            <span className="source-line" data-line={index + 1} key={index}>
+              <Highlight text={line || "\u200b"} />
+            </span>
+          ))}
+        </pre>
+        <textarea
+          ref={input}
+          wrap="soft"
+          aria-label={label}
+          aria-describedby={hintId}
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={() => {
+            escaped.current = false;
+          }}
+          onScroll={(e) => {
+            if (overlay.current) {
+              overlay.current.scrollTop = e.currentTarget.scrollTop;
+              overlay.current.scrollLeft = e.currentTarget.scrollLeft;
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              escaped.current = true;
+              return;
+            }
+            if (e.key === "Tab" && escaped.current) {
+              escaped.current = false;
+              return;
+            }
+            if (
+              e.key !== "Tab" ||
+              e.ctrlKey ||
+              e.metaKey ||
+              e.altKey
+            ) {
+              escaped.current = false;
+              return;
+            }
+
+            const el = e.currentTarget;
+            const current = el.value;
+            const a = el.selectionStart;
+            const b = el.selectionEnd;
+
+            // Shift+Tab with no selection is reserved for leaving the editor.
+            if (e.shiftKey && a === b) {
+              escaped.current = false;
+              return;
+            }
+
             e.preventDefault();
-            const a = e.currentTarget.selectionStart,
-              b = e.currentTarget.selectionEnd;
-            onChange(value.slice(0, a) + "  " + value.slice(b));
-            const target = e.currentTarget;
-            requestAnimationFrame(() => target.setSelectionRange(a + 2, a + 2));
-          }
-        }}
-      />
-    </div>
+            if (a === b) {
+              onChange(current.slice(0, a) + "  " + current.slice(a));
+              requestAnimationFrame(() => el.setSelectionRange(a + 2, a + 2));
+              return;
+            }
+
+            const lineStart = current.lastIndexOf("\n", a - 1) + 1;
+            const selectionEnd =
+              b > a && current[b - 1] === "\n" ? b - 1 : b;
+            const nextBreak = current.indexOf("\n", selectionEnd);
+            const lineEnd = nextBreak === -1 ? current.length : nextBreak;
+            const block = current.slice(lineStart, lineEnd);
+            const lines = block.split("\n");
+            const adjusted = e.shiftKey
+              ? lines.map((line) => line.replace(/^ {1,2}/, ""))
+              : lines.map((line) => (line ? "  " + line : line));
+            const replacement = adjusted.join("\n");
+            const delta = replacement.length - block.length;
+            const firstDelta = adjusted[0].length - lines[0].length;
+            const nextStart = Math.max(lineStart, a + firstDelta);
+            const nextEnd = Math.max(nextStart, b + delta);
+            onChange(
+              current.slice(0, lineStart) +
+                replacement +
+                current.slice(lineEnd),
+            );
+            requestAnimationFrame(() =>
+              el.setSelectionRange(nextStart, nextEnd),
+            );
+          }}
+        />
+      </div>
+    </>
   );
 }
 function Diagram({
