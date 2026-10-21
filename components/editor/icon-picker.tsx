@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { IconValue } from "@/lib/model";
-import { allIcons } from "../icon-catalog";
+import { loadStyle, type CatalogIcon } from "../icon-catalog";
+import { registerIcons } from "../icon-registry";
 import { Icon, emojiNodes } from "../grave-ui";
 import { cn } from "@/lib/utils";
 import {
@@ -107,7 +108,22 @@ export function IconPicker({
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState(value.style || "solid");
   const [query, setQuery] = useState("");
+  const [catalog, setCatalog] = useState<CatalogIcon[]>([]);
+  const [loading, setLoading] = useState(false);
   const tipRef = useRef<HTMLDivElement | null>(null);
+  const loadToken = useRef(0);
+  const load = useCallback((style: string) => {
+    const token = ++loadToken.current;
+    loadStyle(style, (icons) => {
+      if (token !== loadToken.current) return;
+      registerIcons(icons);
+      setCatalog((current) => [...current, ...icons]);
+    })
+      .catch(() => {})
+      .finally(() => {
+        if (token === loadToken.current) setLoading(false);
+      });
+  }, []);
   const showTip = (target: HTMLElement, label: string) => {
     const tip = tipRef.current;
     if (!tip) return;
@@ -129,9 +145,28 @@ export function IconPicker({
   const hideTip = () => {
     if (tipRef.current) tipRef.current.style.opacity = "0";
   };
+  const closePicker = () => {
+    loadToken.current++;
+    setLoading(false);
+    setOpen(false);
+  };
+  const openPicker = () => {
+    setOpen(true);
+    if (tab === "emoji") return;
+    setCatalog([]);
+    setLoading(true);
+    load(tab);
+  };
+  const chooseTab = (next: string) => {
+    setTab(next);
+    hideTip();
+    setCatalog([]);
+    setLoading(next !== "emoji");
+    if (next !== "emoji") load(next);
+  };
   const choose = (next: IconValue) => {
     onChange(next);
-    setOpen(false);
+    closePicker();
   };
   return (
     <>
@@ -141,13 +176,13 @@ export function IconPicker({
           label={value.name || "Choose icon"}
           variant="outline"
           className="size-9 shrink-0"
-          onClick={() => setOpen(true)}
+          onClick={openPicker}
         />
       ) : (
         <Button
           icon={value.name ? value : "icons"}
           className="justify-start"
-          onClick={() => setOpen(true)}
+          onClick={openPicker}
         >
           <span className="truncate">{value.name || "Choose icon"}</span>
         </Button>
@@ -157,14 +192,14 @@ export function IconPicker({
           title="Choose an icon"
           description="Search the built-in icon sets or pick an emoji."
           wide
-          onClose={() => setOpen(false)}
+          onClose={closePicker}
           footer={
             <>
               <Button
                 variant="ghost"
                 onClick={() => {
                   onChange({ name: "" });
-                  setOpen(false);
+                  closePicker();
                 }}
               >
                 Remove icon
@@ -189,13 +224,7 @@ export function IconPicker({
                 hideTip();
               }}
             />
-            <Tabs
-              value={tab}
-              onValueChange={(next) => {
-                setTab(next);
-                hideTip();
-              }}
-            >
+            <Tabs value={tab} onValueChange={chooseTab}>
               <TabsList className="grid w-full grid-cols-4">
                 {["solid", "regular", "brands", "emoji"].map((name) => (
                   <TabsTrigger key={name} value={name} className="capitalize">
@@ -204,6 +233,11 @@ export function IconPicker({
                 ))}
               </TabsList>
             </Tabs>
+            {tab !== "emoji" && loading ? (
+              <p className="text-xs text-muted-foreground" role="status">
+                Loading icons…
+              </p>
+            ) : null}
             <div
               className="icon-picker-grid grid max-h-[340px] grid-cols-[repeat(auto-fill,minmax(42px,1fr))] gap-1.5 overflow-y-auto rounded-lg border border-border bg-muted/30 p-2"
               onScroll={hideTip}
@@ -260,7 +294,7 @@ export function IconPicker({
                         {emojiNodes(name)}
                       </PickerTile>
                     ))
-                : allIcons
+                : catalog
                     .filter(
                       (entry) =>
                         entry.style === tab &&

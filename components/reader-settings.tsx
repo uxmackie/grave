@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { type Product, type ProductRecord } from "@/lib/model";
-import { needsReview, type VersionInfo } from "@/lib/reader-tools";
+import { needsReview, type VersionInfo } from "@/lib/reader-paths";
 import { api } from "@/lib/client-api";
 import {
   Badge,

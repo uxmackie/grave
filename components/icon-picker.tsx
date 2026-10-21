@@ -1,8 +1,10 @@
 "use client";
-import { useState } from "react";
-import { Button, Icon, Modal, Field, emojiNodes } from "./grave-ui";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button, Icon, Field, emojiNodes } from "./grave-ui";
+import { Modal } from "./modal";
 import type { IconValue } from "@/lib/model";
-import { allIcons } from "./icon-catalog";
+import { loadStyle, type CatalogIcon } from "./icon-catalog";
+import { registerIcons } from "./icon-registry";
 const emojis = [
   ["🚀", "rocket launch"],
   ["💎", "gem jewel diamond"],
@@ -52,7 +54,30 @@ export default function IconPicker({
 }) {
   const [open, setOpen] = useState(true),
     [tab, setTab] = useState(value.style || "solid"),
-    [q, setQ] = useState("");
+    [q, setQ] = useState(""),
+    [catalog, setCatalog] = useState<CatalogIcon[]>([]),
+    [loading, setLoading] = useState(true);
+  const loadToken = useRef(0);
+  const load = useCallback((style: string) => {
+    const token = ++loadToken.current;
+    loadStyle(style, (icons) => {
+      if (token !== loadToken.current) return;
+      registerIcons(icons);
+      setCatalog((current) => [...current, ...icons]);
+    })
+      .catch(() => {})
+      .finally(() => {
+        if (token === loadToken.current) setLoading(false);
+      });
+  }, []);
+  useEffect(() => {
+    if (tab !== "emoji") load(tab);
+  }, [tab, load]);
+  const changeTab = (next: string) => {
+    setTab(next);
+    setCatalog([]);
+    setLoading(next !== "emoji");
+  };
   return (
     <>
       <Button onClick={() => setOpen(true)}>
@@ -73,12 +98,17 @@ export default function IconPicker({
               <Button
                 key={t}
                 className={tab === t ? "active" : ""}
-                onClick={() => setTab(t)}
+                onClick={() => changeTab(t)}
               >
                 {t}
               </Button>
             ))}
           </div>
+          {tab !== "emoji" && loading && (
+            <p className="muted icon-loading" role="status">
+              Loading icons…
+            </p>
+          )}
           <div
             className="icon-grid"
             onKeyDown={(e) => {
@@ -123,7 +153,7 @@ export default function IconPicker({
                       {emojiNodes(name)}
                     </Button>
                   ))
-              : allIcons
+              : catalog
                   .filter(
                     (x) =>
                       x.style === tab &&

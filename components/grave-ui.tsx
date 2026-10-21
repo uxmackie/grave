@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   lookupIcon,
   fallbackIcon,
@@ -8,9 +8,7 @@ import {
   iconRevision,
   iconServerRevision,
 } from "./icon-registry";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button as BaseButton } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import type { IconValue } from "@/lib/model";
 import { splitEmoji } from "@/lib/twemoji";
 export function emojiNodes(
@@ -49,7 +47,7 @@ export function Icon({
   const resolved = v ? lookupIcon(v.style || "solid", v.name) : undefined;
   useEffect(() => {
     if (v?.name && v.style !== "emoji" && !resolved)
-      void loadIcons().catch(() => {});
+      void loadIcons(v.style || "solid", v.name).catch(() => {});
   }, [v?.name, v?.style, resolved]);
   if (!v?.name) return null;
   if (v.style === "emoji")
@@ -94,56 +92,6 @@ export function Button({
     </BaseButton>
   );
 }
-export function Modal({
-  title,
-  children,
-  onClose,
-  wide = false,
-  onFocusReturn,
-}: {
-  title: string;
-  children: React.ReactNode;
-  onClose: () => void;
-  wide?: boolean;
-  onFocusReturn?: () => boolean;
-}) {
-  const previous = useRef<HTMLElement | null>(
-    typeof document === "undefined"
-      ? null
-      : (document.activeElement as HTMLElement),
-  );
-  return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    >
-      <DialogContent
-        customLayout
-        showCloseButton={false}
-        className={
-          "modal " +
-          (wide ? "wide " : "") +
-          (title.toLowerCase().includes("navigation") && title !== "Navigation"
-            ? "navigation-drawer"
-            : "")
-        }
-        aria-describedby={undefined}
-        onCloseAutoFocus={(e) => {
-          e.preventDefault();
-          if (!onFocusReturn?.()) previous.current?.focus();
-        }}
-      >
-        <header>
-          <DialogTitle>{title}</DialogTitle>
-          <Button icon="xmark" aria-label="Close dialog" onClick={onClose} />
-        </header>
-        <div className="modal-body">{children}</div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 export function Field({
   label,
   children,
@@ -155,26 +103,6 @@ export function Field({
     <label className="field">
       <span>{label}</span>
       {children}
-    </label>
-  );
-}
-export function Toggle({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (x: boolean) => void;
-}) {
-  return (
-    <label className="toggle">
-      <Checkbox
-        checked={checked}
-        onCheckedChange={(v) => onChange(v === true)}
-        aria-label={label}
-      />
-      <span>{label}</span>
     </label>
   );
 }
