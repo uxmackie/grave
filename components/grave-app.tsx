@@ -3,10 +3,12 @@ import { DocumentHead } from "./document-head";
 import { flushSync } from "react-dom";
 import { readerLink } from "@/lib/reader-links";
 import {
+  type Heading,
   readerPath,
   resolveRedirect,
   readingMinutes,
-} from "@/lib/reader-tools";
+  sourceHeadings,
+} from "@/lib/reader-paths";
 import { WorkspaceHome, VersionSwitcher, PageFeedback } from "./reader-extras";
 import type { QualityIssue } from "@/lib/publish-checks";
 import React, {
@@ -30,28 +32,28 @@ import {
   sectionFor,
   visiblePages,
 } from "@/lib/model";
-import {
-  headings,
-  parse,
-  metadata,
-  updateMetadata,
-  safeUrl,
-  replaceNode,
-  type Node,
-} from "@/lib/mdx";
+import { safeUrl } from "@/lib/url";
+import { replaceNode } from "@/lib/text-edit";
+import type { Node } from "@/lib/mdx";
 import { accentStyles } from "@/lib/colors";
-import { insertBlock } from "@/lib/authoring";
 import { singleFlight } from "@/lib/save-queue";
 import {
   matchingWorkspace,
   type WorkspaceData,
   type LoadedWorkspace,
 } from "@/lib/workspace-state";
-import { Content, SourceEditor } from "./content";
+const Content = lazy(() =>
+  import("./content").then((module) => ({ default: module.Content })),
+);
+const SourceEditor = lazy(() =>
+  import("./content").then((module) => ({ default: module.SourceEditor })),
+);
+const Modal = lazy(() =>
+  import("./modal").then((module) => ({ default: module.Modal })),
+);
 import {
   Button,
   Icon,
-  Modal,
   ThemeControl,
   copyText,
   download,
@@ -485,46 +487,48 @@ function ProductSwitcher({
         <Icon value="chevron-down" />
       </Button>
       {open && (
-        <Modal title="Your products" onClose={() => setOpen(false)}>
-          <div className="product-options">
-            {products.map((p) => (
-              <button
-                key={p.id}
-                className={
-                  "product-option " + (p.id === current?.id ? "selected" : "")
-                }
+        <Suspense fallback={null}>
+          <Modal title="Your products" onClose={() => setOpen(false)}>
+            <div className="product-options">
+              {products.map((p) => (
+                <button
+                  key={p.id}
+                  className={
+                    "product-option " + (p.id === current?.id ? "selected" : "")
+                  }
+                  onClick={() => {
+                    onSelect(p);
+                    setOpen(false);
+                  }}
+                >
+                  {p.logo ? (
+                    <img src={safeUrl(p.logo)} alt="" />
+                  ) : (
+                    <span className="product-icon" style={{ color: p.accent }}>
+                      <Icon value={p.icon} />
+                    </span>
+                  )}
+                  <span>
+                    <strong>{emojiNodes(p.name)}</strong>
+                    <small>{emojiNodes(p.description)}</small>
+                  </span>
+                  {p.id === current?.id && <Icon value="check" />}
+                </button>
+              ))}
+            </div>
+            {editor && (
+              <Button
+                icon="plus"
                 onClick={() => {
-                  onSelect(p);
                   setOpen(false);
+                  onNew?.();
                 }}
               >
-                {p.logo ? (
-                  <img src={safeUrl(p.logo)} alt="" />
-                ) : (
-                  <span className="product-icon" style={{ color: p.accent }}>
-                    <Icon value={p.icon} />
-                  </span>
-                )}
-                <span>
-                  <strong>{emojiNodes(p.name)}</strong>
-                  <small>{emojiNodes(p.description)}</small>
-                </span>
-                {p.id === current?.id && <Icon value="check" />}
-              </button>
-            ))}
-          </div>
-          {editor && (
-            <Button
-              icon="plus"
-              onClick={() => {
-                setOpen(false);
-                onNew?.();
-              }}
-            >
-              Create product
-            </Button>
-          )}
-        </Modal>
+                Create product
+              </Button>
+            )}
+          </Modal>
+        </Suspense>
       )}
     </div>
   );
@@ -731,6 +735,7 @@ function SidebarNav({
             <button
               key={n.id}
               className={"sidebar-link " + (p.id === pageId ? "active" : "")}
+              aria-current={p.id === pageId ? "page" : undefined}
               onClick={() => onPage(p)}
             >
               <Icon value={n.icon || p.icon} />
@@ -776,7 +781,7 @@ function TocLinks({
   items,
   active,
 }: {
-  items: ReturnType<typeof headings>;
+  items: Heading[];
   active: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -933,10 +938,13 @@ function ReaderContent({
     products.find((x) => x.slug === route[0]) ||
     (!route[0] ? products[0] : undefined);
   const page = p?.pages.find((x) => x.slug === route[1]);
-  const reading = useMemo(() => {
-    const tree = parse(page?.source || "").tree;
-    return { headings: headings("", tree), minutes: readingMinutes("", tree) };
-  }, [page?.source]);
+  const reading = useMemo(
+    () => ({
+      headings: sourceHeadings(page?.source || ""),
+      minutes: readingMinutes(page?.source || ""),
+    }),
+    [page?.source],
+  );
   const redirect = p && !page ? resolveRedirect(p, route[1] || "") : undefined;
   useEffect(() => {
     if (p && redirect)
@@ -1138,6 +1146,7 @@ function ReaderContent({
     <>
       <button
         className={"sidebar-link " + (!page ? "active" : "")}
+        aria-current={!page ? "page" : undefined}
         onClick={() => {
           navigate(readerPath(p, undefined, version));
           setMobile(false);
@@ -1150,6 +1159,7 @@ function ReaderContent({
         <button
           key={x.id}
           className={"sidebar-link " + (x.id === page?.id ? "active" : "")}
+          aria-current={x.id === page?.id ? "page" : undefined}
           onClick={() => open(x)}
         >
           <Icon value={x.icon} />
@@ -1281,6 +1291,7 @@ function ReaderContent({
               </div>
               <header className="page-heading">
                 <span className="eyebrow">
+                  <span className="tiny-gem" />
                   {emojiNodes(p.name)} DOCUMENTATION
                 </span>
                 <h1>{emojiNodes(page.title)}</h1>
@@ -1321,12 +1332,22 @@ function ReaderContent({
                   </a>
                 ))}
               </details>
-              <Content
-                source={page.source}
-                product={p}
-                notify={notify}
-                printing={printing}
-              />
+              <Suspense
+                fallback={
+                  <div className="content-skeleton" role="status">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                }
+              >
+                <Content
+                  source={page.source}
+                  product={p}
+                  notify={notify}
+                  printing={printing}
+                />
+              </Suspense>
               {p.reader?.feedback !== false && (
                 <PageFeedback
                   key={p.id + version + page.id}
@@ -1383,25 +1404,36 @@ function ReaderContent({
         </Suspense>
       )}{" "}
       {markdown && page && (
-        <Modal title="View as Markdown" wide onClose={() => setMarkdown(false)}>
-          <div className="markdown-view">
-            <div className="markdown-view-head">
-              <span className="muted">{page.slug}.mdx</span>
-              <Button icon="copy" onClick={() => copyText(page.source, notify)}>
-                Copy Markdown
-              </Button>
+        <Suspense fallback={null}>
+          <Modal
+            title="View as Markdown"
+            wide
+            onClose={() => setMarkdown(false)}
+          >
+            <div className="markdown-view">
+              <div className="markdown-view-head">
+                <span className="muted">{page.slug}.mdx</span>
+                <Button
+                  icon="copy"
+                  onClick={() => copyText(page.source, notify)}
+                >
+                  Copy Markdown
+                </Button>
+              </div>
+              <pre>{page.source}</pre>
             </div>
-            <pre>{page.source}</pre>
-          </div>
-        </Modal>
+          </Modal>
+        </Suspense>
       )}{" "}
       {mobile && (
-        <Modal
-          title="Documentation navigation"
-          onClose={() => setMobile(false)}
-        >
-          {side}
-        </Modal>
+        <Suspense fallback={null}>
+          <Modal
+            title="Documentation navigation"
+            onClose={() => setMobile(false)}
+          >
+            {side}
+          </Modal>
+        </Suspense>
       )}
     </div>
   );
@@ -1479,7 +1511,7 @@ function Homepage({
             </Button>
           )}
           <div className="intro-index" aria-hidden>
-            01 ? EXPLORE
+            01 / EXPLORE
           </div>
         </section>
       )}
@@ -1797,13 +1829,14 @@ function Editor({
     setPageId(next.id);
     setMobile(false);
   };
-  const patchPage = (source: string) => {
+  const patchPage = async (source: string) => {
     setQualityIssue(undefined);
     const p = recordsRef.current.find(
       (x) => x.id === selectedRef.current,
     )?.draft;
     const page = p?.pages.find((x) => x.id === pageId);
     if (!p || !page) return;
+    const { metadata } = await import("@/lib/mdx");
     const meta = metadata(source);
     const changes: Partial<Page> = { source };
     for (const key of ["title", "description", "slug"] as const)
@@ -2402,22 +2435,24 @@ function Editor({
                     className="editor-title-input h-auto px-0 py-1 text-[2.05rem] font-semibold leading-[1.15] tracking-[-0.03em]"
                     aria-label="Page title"
                     value={page.title}
-                    onChange={(e) =>
+                    onChange={async (e) => {
+                      const value = e.target.value;
+                      const { updateMetadata } = await import("@/lib/mdx");
                       change({
                         ...p,
                         pages: p.pages.map((x) =>
                           x.id === page.id
                             ? {
                                 ...x,
-                                title: e.target.value,
+                                title: value,
                                 source: updateMetadata(x.source, {
-                                  title: e.target.value,
+                                  title: value,
                                 }),
                               }
                             : x,
                         ),
-                      })
-                    }
+                      });
+                    }}
                   />
                   <ETextarea
                     className="editor-description-input mt-3 min-h-10 resize-none px-0 py-0 text-[15px] leading-relaxed"
@@ -2425,37 +2460,49 @@ function Editor({
                     placeholder="Add a short description…"
                     rows={2}
                     value={page.description}
-                    onChange={(e) =>
+                    onChange={async (e) => {
+                      const value = e.target.value;
+                      const { updateMetadata } = await import("@/lib/mdx");
                       change({
                         ...p,
                         pages: p.pages.map((x) =>
                           x.id === page.id
                             ? {
                                 ...x,
-                                description: e.target.value,
+                                description: value,
                                 source: updateMetadata(x.source, {
-                                  description: e.target.value,
+                                  description: value,
                                 }),
                               }
                             : x,
                         ),
-                      })
-                    }
+                      });
+                    }}
                   />
                   <div className="mt-10">
-                    <Content
-                      key={page.id + "Visual"}
-                      source={page.source}
-                      product={p}
-                      notify={notify}
-                      onChange={patchPage}
-                      onImage={(node, offset) => {
-                        imageInsertionOffset.current = offset ?? null;
-                        setImageTarget(node || null);
-                        setPendingFile(null);
-                        setPanel("Media library");
-                      }}
-                    />
+                    <Suspense
+                      fallback={
+                        <div className="content-skeleton" role="status">
+                          <span />
+                          <span />
+                          <span />
+                        </div>
+                      }
+                    >
+                      <Content
+                        key={page.id + "Visual"}
+                        source={page.source}
+                        product={p}
+                        notify={notify}
+                        onChange={patchPage}
+                        onImage={(node, offset) => {
+                          imageInsertionOffset.current = offset ?? null;
+                          setImageTarget(node || null);
+                          setPendingFile(null);
+                          setPanel("Media library");
+                        }}
+                      />
+                    </Suspense>
                   </div>
                   <div className="mt-16 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3.5 text-[11px] text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
@@ -2510,18 +2557,28 @@ function Editor({
                     {emojiNodes(page.description)}
                   </p>
                   <div className="mt-10">
-                    <Content
-                      key={page.id + "Preview"}
-                      source={page.source}
-                      product={p}
-                      notify={notify}
-                      onImage={(node, offset) => {
-                        imageInsertionOffset.current = offset ?? null;
-                        setImageTarget(node || null);
-                        setPendingFile(null);
-                        setPanel("Media library");
-                      }}
-                    />
+                    <Suspense
+                      fallback={
+                        <div className="content-skeleton" role="status">
+                          <span />
+                          <span />
+                          <span />
+                        </div>
+                      }
+                    >
+                      <Content
+                        key={page.id + "Preview"}
+                        source={page.source}
+                        product={p}
+                        notify={notify}
+                        onImage={(node, offset) => {
+                          imageInsertionOffset.current = offset ?? null;
+                          setImageTarget(node || null);
+                          setPendingFile(null);
+                          setPanel("Media library");
+                        }}
+                      />
+                    </Suspense>
                   </div>
                   <div className="mt-16 flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-3.5 text-[11px] text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
@@ -2549,15 +2606,23 @@ function Editor({
             {...imageHandlers}
           >
             {p && page ? (
-              <SourceEditor
-                target={
-                  qualityIssue?.pageId === page.id && !qualityIssue.snippet
-                    ? qualityIssue
-                    : undefined
+              <Suspense
+                fallback={
+                  <div className="source-editor-loading" role="status">
+                    Loading source…
+                  </div>
                 }
-                value={page.source}
-                onChange={patchPage}
-              />
+              >
+                <SourceEditor
+                  target={
+                    qualityIssue?.pageId === page.id && !qualityIssue.snippet
+                      ? qualityIssue
+                      : undefined
+                  }
+                  value={page.source}
+                  onChange={patchPage}
+                />
+              </Suspense>
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto">{emptyState}</div>
             )}
@@ -2723,17 +2788,19 @@ function Editor({
                     published={record?.published || null}
                     change={change}
                     notify={notify}
-                    onInsert={(s) => {
-                      if (page)
-                        patchPage(
-                          imageTarget
-                            ? replaceNode(page.source, imageTarget, s.trimEnd())
-                            : insertBlock(
-                                page.source,
-                                s,
-                                imageInsertionOffset.current,
-                              ),
-                        );
+                    onInsert={async (s) => {
+                      if (page) {
+                        const source = imageTarget
+                          ? replaceNode(page.source, imageTarget, s.trimEnd())
+                          : (
+                              await import("@/lib/authoring")
+                            ).insertBlock(
+                              page.source,
+                              s,
+                              imageInsertionOffset.current,
+                            );
+                        patchPage(source);
+                      }
                       setImageTarget(null);
                       setPendingFile(null);
                       setPanel("");

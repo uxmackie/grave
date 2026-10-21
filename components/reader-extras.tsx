@@ -3,7 +3,7 @@ import {DocumentHead} from './document-head';
 import {lazy,Suspense,useEffect,useState} from 'react';
 import type {Product,Page,Workspace} from '@/lib/model';
 import {visiblePages} from '@/lib/model';
-import {readerPath,type VersionInfo} from '@/lib/reader-tools';
+import {readerPath,type VersionInfo} from '@/lib/reader-paths';
 import {api} from '@/lib/client-api';
 import {Button,Icon,ThemeControl,emojiNodes} from './grave-ui';
 const Search=lazy(()=>import('./doc-search'));

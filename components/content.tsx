@@ -6,13 +6,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
-import Prism from "prismjs";
 import { Popover } from "radix-ui";
-import "prismjs/components/prism-javascript";
-import "prismjs/components/prism-typescript";
-import "prismjs/components/prism-python";
-import "prismjs/components/prism-bash";
-import "prismjs/components/prism-json";
 import {
   parse,
   raw,
@@ -45,8 +39,8 @@ import {
   Textarea as ETextarea,
   Toggle as EToggle,
 } from "./editor/ui";
-import { IconPicker as EIconPicker } from "./editor/icon-picker";
 import { cn } from "@/lib/utils";
+import { highlightWith, loadPrism, loadedPrism } from "@/lib/highlight";
 import type { Product, IconValue } from "@/lib/model";
 import { readerLink } from "@/lib/reader-links";
 
@@ -69,13 +63,26 @@ const blockIcons: Record<string, string> = {
   Snippet: "puzzle-piece",
 };
 import { inlineMarkdown, selectionMarkdown } from "@/lib/dom-markdown";
-import { FormatToolbar } from "./format-toolbar";
 import {
   convertible,
   convertTextBlock,
   insertBlock,
   continueList,
 } from "@/lib/authoring";
+
+// Editing-only surfaces stay out of the reader bundle. They are resolved the
+// first time someone actually selects text, edits a component, or inserts an
+// icon in the editor.
+const LazyFormatToolbar = React.lazy(() =>
+  import("./format-toolbar").then((module) => ({
+    default: module.FormatToolbar,
+  })),
+);
+const LazyIconPicker = React.lazy(() =>
+  import("./editor/icon-picker").then((module) => ({
+    default: module.IconPicker,
+  })),
+);
 type Props = {
   source: string;
   product: Product;
@@ -92,13 +99,32 @@ export const Highlight = React.memo(function Highlight({
   text: string;
   language?: string;
 }) {
-  const grammar = Prism.languages[language] || Prism.languages.markup;
-  return (
-    <span
-      dangerouslySetInnerHTML={{
-        __html: Prism.highlight(text, grammar, language),
-      }}
-    />
+  const [html, setHtml] = useState<string | null>(() => {
+    const prism = loadedPrism();
+    return prism ? highlightWith(prism, text, language) : null;
+  });
+  useEffect(() => {
+    let live = true;
+    const prism = loadedPrism();
+    if (prism) {
+      setHtml(highlightWith(prism, text, language));
+      return;
+    }
+    loadPrism()
+      .then((loaded) => {
+        if (live) setHtml(highlightWith(loaded, text, language));
+      })
+      .catch(() => {
+        if (live) setHtml(null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [text, language]);
+  return html ? (
+    <span dangerouslySetInnerHTML={{ __html: html }} />
+  ) : (
+    <span>{text}</span>
   );
 });
 export function SourceEditor({
@@ -767,18 +793,20 @@ function ComponentProperties({
                 </EField>
               ) : null}
               <EField label="Icon">
-                <EIconPicker
-                  value={{
-                    name: text(inline ? "name" : "icon") || "circle-info",
-                    style: text(inline ? "style" : "iconStyle") || "solid",
-                    color: text(inline ? "color" : "iconColor") || undefined,
-                  }}
-                  onChange={(icon) => {
-                    set(inline ? "name" : "icon", icon.name);
-                    set(inline ? "style" : "iconStyle", icon.style || "solid");
-                    set(inline ? "color" : "iconColor", icon.color || "");
-                  }}
-                />
+                <React.Suspense fallback={null}>
+                  <LazyIconPicker
+                    value={{
+                      name: text(inline ? "name" : "icon") || "circle-info",
+                      style: text(inline ? "style" : "iconStyle") || "solid",
+                      color: text(inline ? "color" : "iconColor") || undefined,
+                    }}
+                    onChange={(icon) => {
+                      set(inline ? "name" : "icon", icon.name);
+                      set(inline ? "style" : "iconStyle", icon.style || "solid");
+                      set(inline ? "color" : "iconColor", icon.color || "");
+                    }}
+                  />
+                </React.Suspense>
               </EField>
               {inline ? (
                 <EToggle
@@ -1951,22 +1979,24 @@ export function Content({
         </EButton>
       )}
       {selection && onChange && (
-        <FormatToolbar
-          selection={selection}
-          product={product}
-          onFormat={format}
-          onInsertIcon={() => {
-            iconInsertion.current = captureSelection(selection);
-            if (!iconInsertion.current) return;
-            setIconValue({ name: "circle-info", style: "solid" });
-            setIconAccent(true);
-            setIconTooltip("");
-            setIconHref("");
-            setSelection(null);
-            setIconInsert(true);
-          }}
-          onClose={() => setSelection(null)}
-        />
+        <React.Suspense fallback={null}>
+          <LazyFormatToolbar
+            selection={selection}
+            product={product}
+            onFormat={format}
+            onInsertIcon={() => {
+              iconInsertion.current = captureSelection(selection);
+              if (!iconInsertion.current) return;
+              setIconValue({ name: "circle-info", style: "solid" });
+              setIconAccent(true);
+              setIconTooltip("");
+              setIconHref("");
+              setSelection(null);
+              setIconInsert(true);
+            }}
+            onClose={() => setSelection(null)}
+          />
+        </React.Suspense>
       )}
       {slash && (
         <PanelDialog
@@ -2061,7 +2091,9 @@ export function Content({
         >
           <div className="grid gap-5">
             <EField label="Icon">
-              <EIconPicker value={iconValue} onChange={setIconValue} />
+              <React.Suspense fallback={null}>
+                <LazyIconPicker value={iconValue} onChange={setIconValue} />
+              </React.Suspense>
             </EField>
             <EToggle
               label="Highlight with accent color"

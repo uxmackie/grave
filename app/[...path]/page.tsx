@@ -5,7 +5,7 @@ import GraveApp from '@/components/grave-app';
 import {permanentRedirect} from 'next/navigation';
 import {db} from '@/lib/server';
 import {publicProduct,type Product} from '@/lib/model';
-import {resolveRedirect,readerPath} from '@/lib/reader-tools';
+import {resolveRedirect,readerPath} from '@/lib/reader-paths';
 export const dynamic='force-dynamic';
 export default async function Page({params,searchParams}:{params:Promise<{path:string[]}>;searchParams:Promise<Record<string,string|string[]|undefined>>}){
  const {path}=await params;let destination:string|undefined;

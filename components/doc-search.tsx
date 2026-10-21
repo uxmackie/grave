@@ -1,8 +1,9 @@
 "use client";
 import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Product, Page } from "@/lib/model";
-import { searchDocuments, searchResults } from "@/lib/reader-tools";
-import { Modal, Button, Icon, emojiNodes } from "./grave-ui";
+import { searchDocuments, searchResults } from "@/lib/search";
+import { Button, Icon, emojiNodes } from "./grave-ui";
+import { Modal } from "./modal";
 export default function Search({
   product,
   products,

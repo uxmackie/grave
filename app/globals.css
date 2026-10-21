@@ -271,6 +271,11 @@
   color: var(--accent-text);
   width: 13px;
 }
+.icon-loading {
+  margin: 8px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
 .icon-grid {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -4349,4 +4354,487 @@ img.twemoji {
 }
 .prose .editable-block:has(.editable-block:hover) > .block-grip {
   opacity: 0;
+}
+
+/* ==========================================================================
+   Grave blend
+   Mintlify-calm structure with a quiet engraved signature: paper light,
+   graphite dark, one monochrome accent, and a little texture in the hero.
+   Every rule here is scoped to the reader/workspace so the editor keeps its
+   flat, monochrome instrument-panel feel.
+   ========================================================================== */
+
+.reader,
+.workspace-home {
+  background:
+    radial-gradient(
+      68rem 30rem at 50% -14rem,
+      color-mix(in srgb, var(--accent) 4%, transparent),
+      transparent 72%
+    ),
+    var(--bg);
+}
+[data-theme="dark"] .reader,
+[data-theme="dark"] .workspace-home {
+  background:
+    radial-gradient(
+      72rem 34rem at 50% -12rem,
+      color-mix(in srgb, var(--accent) 9%, transparent),
+      transparent 74%
+    ),
+    var(--bg);
+}
+.reader ::selection,
+.workspace-home ::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* --- Header: calmer chrome, clearer product identity ---------------------- */
+.reader .reader-header {
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+}
+.reader .brand-group {
+  gap: 15px;
+}
+.reader .brand img {
+  width: 90px;
+  height: 32px;
+}
+.reader .brand-divider {
+  height: 18px;
+  transform: none;
+  opacity: 0.85;
+}
+.reader .product-trigger {
+  margin-left: -6px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  transition: background-color var(--grave-motion-fast) ease;
+}
+.reader .product-trigger:hover {
+  background: var(--surface);
+}
+.reader .product-trigger > .icon:last-child {
+  margin-left: 8px;
+  opacity: 0.72;
+}
+.reader .search-trigger {
+  box-shadow: 0 1px 2px #20202008;
+}
+.reader .reader-tabs {
+  gap: 24px;
+}
+.reader .reader-tabs button {
+  position: relative;
+  font-weight: 500;
+  color: var(--muted);
+}
+.reader .reader-tabs button:hover {
+  color: var(--text);
+}
+.reader .reader-tabs button.active {
+  font-weight: 600;
+}
+
+/* --- Sidebar: editorial labels, a hairline active marker ------------------ */
+.reader .reader-sidebar {
+  padding-top: 27px;
+}
+.reader .nav-section {
+  margin: 20px 0;
+}
+.reader .nav-section h3 {
+  padding-left: 8px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+.reader .sidebar-link {
+  border-radius: 8px;
+}
+.reader .sidebar-link.active {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.reader .sidebar-message {
+  border-radius: 10px;
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--surface) 78%, var(--bg)),
+    var(--bg) 72%
+  );
+}
+.reader .sidebar-message > .icon {
+  width: 18px;
+  height: 18px;
+}
+.reader .sidebar-bottom {
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+
+/* --- Article heading: a small engraved eyebrow ----------------------------- */
+.reader .reader-main {
+  padding-top: 42px;
+}
+.reader .breadcrumb {
+  font-size: 11.5px;
+  letter-spacing: 0.01em;
+}
+.reader .page-heading {
+  margin: 22px 0 34px;
+}
+.reader .page-heading .eyebrow {
+  gap: 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--subtle);
+}
+.reader .page-heading .eyebrow .tiny-gem {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+.reader .page-heading h1 {
+  font-size: clamp(2.1rem, 3.4vw, 2.4rem);
+  letter-spacing: -0.035em;
+}
+.reader .page-heading > p {
+  text-wrap: pretty;
+}
+.reader .page-actions {
+  margin-top: 20px;
+  gap: 2px;
+}
+.reader .page-actions .button {
+  border-radius: 7px;
+}
+.reader .page-freshness {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- On this page: a quieter index ---------------------------------------- */
+.reader .toc h3 {
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+.reader .toc h3 > .icon {
+  color: var(--muted);
+}
+.reader .toc-links > a {
+  font-size: 12.5px;
+}
+
+/* --- Homepage: a faint dot field, a horizontal edition mark ---------------- */
+.reader .home-intro {
+  padding: 68px 0 50px;
+}
+.reader .home-intro::after {
+  content: "";
+  position: absolute;
+  right: -28px;
+  top: 16px;
+  width: min(34vw, 380px);
+  height: 290px;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--muted) 24%, transparent) 1px,
+    transparent 1.4px
+  );
+  background-size: 16px 16px;
+  opacity: 0.55;
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    #000 0%,
+    transparent 70%
+  );
+  mask-image: radial-gradient(ellipse at center, #000 0%, transparent 70%);
+}
+.reader .home-intro > :not(.intro-index) {
+  position: relative;
+  z-index: 1;
+}
+.reader .home-intro .eyebrow {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+.reader .home-intro .eyebrow .tiny-gem {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+.reader .home-intro h1 {
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+.reader .home-intro p {
+  font-size: 1.0625rem;
+  text-wrap: pretty;
+}
+.reader .home-intro .button.primary {
+  min-height: 44px;
+  border-radius: 8px;
+  color: var(--on-accent, #fff);
+  box-shadow:
+    inset 0 1px 0 #ffffff24,
+    0 7px 20px #2020201a;
+}
+.reader .intro-index {
+  position: absolute;
+  top: 72px;
+  right: 0;
+  bottom: auto;
+  left: auto;
+  width: auto;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 10px/1 PaperMono, ui-monospace, monospace;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  z-index: 1;
+}
+.reader .intro-index::before {
+  content: "";
+  width: 32px;
+  height: 1px;
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
+}
+.reader .featured-grid {
+  gap: 14px;
+  margin: 6px 0 58px;
+}
+.reader .featured-card {
+  min-height: 230px;
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 58%, var(--bg)),
+    var(--bg) 66%
+  );
+}
+.reader .featured-card::before {
+  content: "";
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 45%, var(--line)),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity var(--grave-motion-fast) ease;
+}
+.reader .featured-card:hover::before {
+  opacity: 1;
+}
+.reader .featured-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--accent) 14%, var(--line));
+}
+.reader .featured-card h2 {
+  font-size: 15.5px;
+}
+.reader .card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+.reader .card-cta::after {
+  content: "→";
+  transition: transform var(--grave-motion) var(--grave-ease);
+}
+.reader .featured-card:hover .card-cta::after {
+  transform: translateX(2px);
+}
+.reader .section-heading h2 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.reader .section-heading > span {
+  font-size: 10.5px;
+}
+.reader .guide-grid h3 {
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+.reader .guide-grid button {
+  font-size: 13.5px;
+  padding: 11px 2px;
+}
+.reader .home-footer {
+  margin-top: 58px;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+}
+
+/* --- Page footer: a small grave mark and softer navigation cards ---------- */
+.reader .page-footer {
+  margin-top: 56px;
+  padding-top: 26px;
+}
+.reader .page-footer > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.reader .page-footer > span:first-child::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  background: var(--accent);
+}
+.reader .prev-next {
+  gap: 12px;
+}
+.reader .prev-next button {
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 42%, var(--bg));
+}
+.reader .prev-next button:hover {
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+.reader .prev-next small {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.reader .prev-next strong {
+  font-size: 13.5px;
+  letter-spacing: -0.01em;
+}
+
+/* --- Workspace home: the same paper, one engraved eyebrow ----------------- */
+.workspace-home .workspace-intro {
+  position: relative;
+}
+.workspace-home .workspace-intro::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 26px;
+  width: min(32vw, 330px);
+  height: 240px;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--muted) 22%, transparent) 1px,
+    transparent 1.4px
+  );
+  background-size: 16px 16px;
+  opacity: 0.5;
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    #000 0%,
+    transparent 72%
+  );
+  mask-image: radial-gradient(ellipse at center, #000 0%, transparent 72%);
+}
+.workspace-home .workspace-intro > * {
+  position: relative;
+  z-index: 1;
+}
+.workspace-home .workspace-intro .eyebrow {
+  gap: 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--subtle);
+}
+.workspace-home .workspace-intro .eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  background: var(--accent);
+}
+
+/* --- Lazy article and source loading -------------------------------------- */
+.reader .content-skeleton {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding-top: 10px;
+}
+.reader .content-skeleton span {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--surface),
+    var(--hover),
+    var(--surface)
+  );
+  background-size: 220% 100%;
+  animation: grave-skeleton 1.6s linear infinite;
+}
+.reader .content-skeleton span:nth-child(1) {
+  width: 42%;
+  height: 23px;
+  margin-bottom: 5px;
+}
+.reader .content-skeleton span:nth-child(2) {
+  width: 96%;
+}
+.reader .content-skeleton span:nth-child(3) {
+  width: 72%;
+}
+@keyframes grave-skeleton {
+  to {
+    background-position: -220% 0;
+  }
+}
+.source-editor-loading {
+  padding: 48px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+  .reader .home-intro::after,
+  .workspace-home .workspace-intro::after {
+    opacity: 0.28;
+  }
+}
+@media (max-width: 900px) {
+  .reader .home-intro::after,
+  .workspace-home .workspace-intro::after,
+  .reader .intro-index {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reader .content-skeleton span {
+    animation: none;
+  }
+  .reader .card-cta::after {
+    transition: none;
+  }
 }
