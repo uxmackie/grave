@@ -189,6 +189,11 @@ export default function GraveApp() {
     setRoute(pathParts());
     setReady(true);
     setTheme(localStorage.getItem("grave-theme") || "system");
+    // Reader pages need the MDX renderer for their largest content. Start the
+    // lazy chunk while the workspace request is in flight instead of waiting
+    // for the first render. Home and editor routes do not use it immediately.
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    if (parts[0] !== "editor" && parts.length >= 2) void import("./content");
     let lastUrl = location.pathname + location.search + location.hash;
     const remember = () => {
       lastUrl = location.pathname + location.search + location.hash;
@@ -269,12 +274,12 @@ export default function GraveApp() {
         <div className="empty-state">
           <img
             className="standalone-logo logo-light"
-            src="/brand/wordmark-light.svg"
+            src="/brand/wordmark-light.png"
             alt="Grave"
           />
           <img
             className="standalone-logo logo-dark"
-            src="/brand/wordmark-dark.svg"
+            src="/brand/wordmark-dark.png"
             alt="Grave"
           />
           <h1>We couldn’t open your workspace</h1>
@@ -285,7 +290,7 @@ export default function GraveApp() {
         <Login onLogin={() => setAuth(true)} navigate={navigate} />
       ) : !data ? (
         <div className="loading">
-          <img src="/favicon.svg" alt="" />
+          <img src="/favicon-32.png" alt="" />
           Opening your documentation…
         </div>
       ) : data.mode === "editor" ? (
@@ -348,12 +353,12 @@ function Login({
       <div className="w-full max-w-sm rounded-xl border border-border bg-card p-7 shadow-sm">
         <img
           className="logo-light h-7 w-auto"
-          src="/brand/wordmark-light.svg"
+          src="/brand/wordmark-light.png"
           alt="Grave"
         />
         <img
           className="logo-dark h-7 w-auto"
-          src="/brand/wordmark-dark.svg"
+          src="/brand/wordmark-dark.png"
           alt="Grave"
         />
         <h1 className="mt-6 text-[1.65rem] font-semibold leading-tight tracking-[-0.03em]">
@@ -1567,7 +1572,7 @@ function Homepage({
         </div>
       )}
       <footer className="home-footer">
-        <img src="/favicon.svg" alt="" />
+        <img src="/favicon-32.png" alt="" />
         <span>Thoughtfully documented with Grave.</span>
       </footer>
     </>

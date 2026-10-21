@@ -15,6 +15,13 @@
       "when": 1791522938707,
       "tag": "0001_reader_tools",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792572792606,
+      "tag": "0002_brand_assets",
+      "breakpoints": true
     }
   ]
 }

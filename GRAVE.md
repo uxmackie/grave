@@ -12,6 +12,7 @@ npm install
 npm run typecheck
 npm test
 npm run setup:local
+npm run test:browser
 npm run dev
 ```
 
@@ -24,6 +25,8 @@ The development server uses persistent local D1 and R2 storage under `.wrangler/
 ## Production
 
 The Sites manifest declares D1 `DB` and R2 `BUCKET`. Generate and review Drizzle migrations from `db/schema.ts`, build the Worker, and configure the `EDITOR_PASSWORD` secret before deployment. Without a configured password, the editor fails closed. All editing APIs require a valid HttpOnly session; publication uses optimistic revisions.
+
+Production setup, secrets, remote migrations, deployment, health checks, backups, restore, rollback, and monitoring are documented in [OPERATIONS.md](OPERATIONS.md). CI runs typecheck, unit tests, the production build, browser integration tests, and automated accessibility checks on every pull request.
 
 No deployment has been made. See `VERIFICATION.md` for the verification log.
 
@@ -45,9 +48,9 @@ Unknown MDX is preserved as source and shown inertly. Literal component attribut
 
 - Supplied Grave SVG logos from `logo`.
 - [Mintlify components](https://github.com/mintlify/components) and [navigation](https://www.mintlify.com/docs/organize/navigation) informed the documentation patterns.
-- [Paper Mono](https://github.com/paper-design/paper-mono) is referenced from its official repository as a webfont. Font loading has not been verified in this restricted environment.
-- Font Awesome Free Solid, Regular and Brands packages provide the shared icon library.
+- [Paper Mono](https://github.com/paper-design/paper-mono) and Inter are self-hosted in `public/fonts` under the SIL Open Font License; the license texts ship beside them.
+- Font Awesome Free Solid, Regular and Brands packages provide the shared icon library. Twemoji SVGs are loaded from the pinned jsDelivr release in `lib/twemoji.ts`.
 
 ## Status
 
-Dependencies are installed, type checking passes, the unit suite passes, the local browser checks pass, and the production build succeeds. The initial Drizzle migration has been generated and applied locally. No deployment has been made. `REQUIREMENTS.md` retains every original requirement; `VERIFICATION.md` records the verification history.
+Dependencies are installed, type checking passes, the unit suite passes, the local browser checks pass, the accessibility checks pass, and the production build succeeds. The Drizzle migrations have been generated and applied locally. CI and production operations documentation are in place. No deployment has been made. `REQUIREMENTS.md` retains every original requirement; `VERIFICATION.md` records the verification history.

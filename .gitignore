@@ -53,6 +53,8 @@ next-env.d.ts
 *.log
 .dev.vars*
 !.env.example
+/backups/
+/wrangler.production.json
 
 VERIFICATION.md
 REQUIREMENTS.md
