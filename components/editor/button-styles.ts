@@ -34,12 +34,21 @@ const quiet =
   "cursor-pointer touch-manipulation rounded-[10px] transition-[scale,background-color,color] duration-200 ease-out " +
   "active:scale-[0.96] motion-reduce:active:scale-100";
 
+// Secondary actions sit on the same paper as the editor. They keep the fine
+// inner highlight and hairline of the Evil Buttons face, but read as a
+// surface rather than a primary, pressed action.
+const paper =
+  "border border-border bg-card text-foreground " +
+  "shadow-[inset_0_1px_0_rgb(255_255_255/0.42),0_1px_2px_rgb(0_0_0/0.04)] " +
+  "hover:bg-muted/55 hover:text-foreground " +
+  "active:shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_1px_1px_rgb(0_0_0/0.03)]";
+
 export function evilButtonClass(variant?: EvilButtonVariant | null) {
   if (variant === "ghost") return quiet;
   if (variant === "link") return "cursor-pointer";
   if (variant === "default") return interaction + " " + raisedStrong;
   if (variant === "destructive")
     return interaction + " " + raised + " text-red-100";
-  if (variant === "secondary") return interaction + " " + raised;
-  return interaction + " " + raised;
+  if (variant === "secondary") return interaction + " " + paper;
+  return interaction + " " + paper;
 }

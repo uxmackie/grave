@@ -346,11 +346,11 @@ function Login({
     [busy, setBusy] = useState(false);
   return (
     <main
-      className="grid min-h-dvh place-items-center bg-muted/30 px-5 py-10"
+      className="login-shell grid min-h-dvh place-items-center bg-muted/30 px-5 py-10"
       id="main"
       tabIndex={-1}
     >
-      <div className="w-full max-w-sm rounded-xl border border-border bg-card p-7 shadow-sm">
+      <div className="login-card w-full max-w-sm rounded-xl border border-border bg-card p-7 shadow-sm">
         <img
           className="logo-light h-7 w-auto"
           src="/brand/wordmark-light.png"
@@ -962,10 +962,27 @@ function ReaderContent({
     [search, setSearch] = useState(false),
     [mobile, setMobile] = useState(false),
     [markdown, setMarkdown] = useState(false),
+    [sidebarOpen, setSidebarOpen] = useState(true),
     [activeHeading, setActiveHeading] = useState("");
   useEffect(() => {
     if (p) setTab(page ? sectionFor(p, page.id) || "" : p.nav[0]?.id || "");
   }, [p?.id, page?.id]);
+  useEffect(() => {
+    try {
+      setSidebarOpen(localStorage.getItem("grave-reader-sidebar") !== "closed");
+    } catch {}
+  }, []);
+  const toggleSidebar = () =>
+    setSidebarOpen((open) => {
+      const next = !open;
+      try {
+        localStorage.setItem(
+          "grave-reader-sidebar",
+          next ? "open" : "closed",
+        );
+      } catch {}
+      return next;
+    });
   useEffect(() => {
     setActiveHeading(reading.headings[0]?.id || "");
   }, [reading]);
@@ -1148,65 +1165,108 @@ function ReaderContent({
       setTimeout(() => document.getElementById(hash)?.scrollIntoView(), 50);
   };
   const side = (
-    <>
-      <button
-        className={"sidebar-link " + (!page ? "active" : "")}
-        aria-current={!page ? "page" : undefined}
-        onClick={() => {
-          navigate(readerPath(p, undefined, version));
-          setMobile(false);
-        }}
-      >
-        <Icon value="house" />
-        Overview
-      </button>
-      {other.map((x) => (
-        <button
-          key={x.id}
-          className={"sidebar-link " + (x.id === page?.id ? "active" : "")}
-          aria-current={x.id === page?.id ? "page" : undefined}
-          onClick={() => open(x)}
+    <div className="sidebar-stack">
+      <div className="sidebar-identity">
+        <span className="sidebar-kicker">Documentation</span>
+        <span className="sidebar-count">
+          {pages.length} {pages.length === 1 ? "page" : "pages"}
+        </span>
+      </div>
+      {nav.length > 1 && (
+        <nav
+          className="reader-tabs sidebar-sections"
+          aria-label="Documentation sections"
         >
-          <Icon value={x.icon} />
-          <span>{emojiNodes(x.title)}</span>
-        </button>
-      ))}
-      <SidebarNav
-        nav={[
-          ...(section?.children || []).filter((n) => n.type === "page"),
-          ...(section?.children || []).filter((n) => n.type !== "page"),
-        ]}
-        pages={pages}
-        pageId={page?.id}
-        onPage={open}
-      />
-      {p.message.title && (
-        <a className="sidebar-message" href={readerLink(p, p.message.href)}>
-          <Icon value={p.message.icon} />
-          <strong>{emojiNodes(p.message.title)}</strong>
-          <p>{emojiNodes(p.message.description)}</p>
-        </a>
+          {nav.map((n) => (
+            <button
+              key={n.id}
+              className={section?.id === n.id ? "active" : ""}
+              aria-pressed={section?.id === n.id}
+              onClick={() => {
+                setTab(n.id);
+                if (page) {
+                  const first = flatten(n.children).find((x) => x.pageId);
+                  const next = pages.find((x) => x.id === first?.pageId);
+                  if (next) open(next);
+                }
+              }}
+            >
+              {emojiNodes(n.title)}
+            </button>
+          ))}
+        </nav>
       )}
-      <VersionSwitcher
-        product={p}
-        latest={latestProduct || p}
-        page={page}
-        version={version}
-        navigate={navigate}
-      />
-      <div className="sidebar-bottom">
-        <ThemeControl value={theme} onChange={themeChange} />
-        <a
-          href="/editor"
-          onClick={(e) => {
-            e.preventDefault();
-            navigate("/editor/" + p.id);
+      <div className="sidebar-nav">
+        <button
+          className={"sidebar-link overview-link " + (!page ? "active" : "")}
+          aria-current={!page ? "page" : undefined}
+          onClick={() => {
+            navigate(readerPath(p, undefined, version));
+            setMobile(false);
           }}
         >
-          <Icon value="pen-to-square" /> Editor
-        </a>
+          <span className="sidebar-link-icon">
+            <Icon value="house" />
+          </span>
+          <span>Overview</span>
+        </button>
+        {other.map((x) => (
+          <button
+            key={x.id}
+            className={"sidebar-link " + (x.id === page?.id ? "active" : "")}
+            aria-current={x.id === page?.id ? "page" : undefined}
+            onClick={() => open(x)}
+          >
+            <span className="sidebar-link-icon">
+              <Icon value={x.icon} />
+            </span>
+            <span>{emojiNodes(x.title)}</span>
+          </button>
+        ))}
+        <SidebarNav
+          nav={[
+            ...(section?.children || []).filter((n) => n.type === "page"),
+            ...(section?.children || []).filter((n) => n.type !== "page"),
+          ]}
+          pages={pages}
+          pageId={page?.id}
+          onPage={open}
+        />
       </div>
-    </>
+      {p.message.title && (
+        <a className="sidebar-message" href={readerLink(p, p.message.href)}>
+          <span className="sidebar-message-icon">
+            <Icon value={p.message.icon} />
+          </span>
+          <span className="sidebar-message-copy">
+            <strong>{emojiNodes(p.message.title)}</strong>
+            <p>{emojiNodes(p.message.description)}</p>
+          </span>
+          <Icon value="arrow-right" className="sidebar-message-arrow" />
+        </a>
+      )}
+      <div className="sidebar-tail">
+        <VersionSwitcher
+          product={p}
+          latest={latestProduct || p}
+          page={page}
+          version={version}
+          navigate={navigate}
+        />
+        <div className="sidebar-bottom">
+          <ThemeControl value={theme} onChange={themeChange} />
+          <a
+            href="/editor"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/editor/" + p.id);
+            }}
+          >
+            <Icon value="pen-to-square" /> Editor
+          </a>
+        </div>
+      </div>
+    </div>
   );
   return (
     <div
@@ -1222,6 +1282,15 @@ function ReaderContent({
       <header className="reader-header">
         <div className="header-main">
           <div className="brand-group">
+            <Button
+              className="nav-toggle"
+              icon="bars"
+              aria-label={
+                sidebarOpen ? "Collapse navigation" : "Open navigation"
+              }
+              aria-expanded={sidebarOpen}
+              onClick={toggleSidebar}
+            />
             <Brand workspace={data.workspace} navigate={navigate} />
             <span className="brand-divider" />
             <ProductSwitcher
@@ -1243,6 +1312,17 @@ function ReaderContent({
                 {emojiNodes(x.title)}
               </a>
             ))}
+            <a
+              className="header-editor-link"
+              href="/editor"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/editor/" + p.id);
+              }}
+            >
+              <Icon value="pen-to-square" />
+              <span>Editor</span>
+            </a>
             <Button
               className="mobile-menu"
               icon="bars"
@@ -1253,27 +1333,22 @@ function ReaderContent({
             />
           </div>
         </div>
-        <nav className="reader-tabs" aria-label="Documentation sections">
-          {nav.map((n) => (
-            <button
-              key={n.id}
-              className={section?.id === n.id ? "active" : ""}
-              onClick={() => {
-                setTab(n.id);
-                if (page) {
-                  const first = flatten(n.children).find((x) => x.pageId);
-                  const next = pages.find((x) => x.id === first?.pageId);
-                  if (next) open(next);
-                }
-              }}
-            >
-              {emojiNodes(n.title)}
-            </button>
-          ))}
-        </nav>
       </header>
-      <div className="reader-layout">
-        <aside className="reader-sidebar">{side}</aside>
+      <div
+        className="reader-layout"
+        data-sidebar={sidebarOpen ? "open" : "closed"}
+      >
+        <aside className="reader-sidebar" aria-label="Documentation sidebar">
+          {side}
+          <button
+            type="button"
+            className="sidebar-rail"
+            aria-label="Collapse navigation"
+            onClick={toggleSidebar}
+          >
+            <span aria-hidden="true" />
+          </button>
+        </aside>
         <main id="main" className={"reader-main " + (!page ? "homepage" : "")}>
           {redirect ? (
             <p role="status">Opening the moved page…</p>
@@ -1934,10 +2009,13 @@ function Editor({
     }
   };
   const sidebar = (
-    <div className="flex h-full min-h-0 flex-col bg-transparent">
-      <div className="flex items-center justify-between px-5 pb-2 pt-3.5">
+    <div className="editor-sidebar-inner flex h-full min-h-0 flex-col bg-transparent">
+      <div className="editor-sidebar-head flex items-center justify-between px-5 pb-2 pt-3.5">
         <span className="text-[11px] font-medium text-muted-foreground">
-          Navigation
+          Contents
+        </span>
+        <span className="editor-sidebar-count">
+          {p?.pages.length || 0}
         </span>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-4">
@@ -2037,7 +2115,7 @@ function Editor({
               ))}
               {/* The icon rail owns these on desktop; keep them in the mobile
                   navigation sheet so every tool remains reachable. */}
-              <div className="md:hidden">
+              <div className="lg:hidden">
                 {[
                   ["Find and replace", "magnifying-glass"],
                   ["Media library", "images"],
@@ -2061,7 +2139,7 @@ function Editor({
           </nav>
         </div>
       </div>
-      <div className="shrink-0 border-t border-border/80 p-2.5">
+      <div className="editor-sidebar-footer shrink-0 border-t border-border/80 p-2.5">
         <div className="flex items-center gap-2.5 px-1 pb-2">
           <span className="grid size-7 shrink-0 place-items-center rounded-md border border-border bg-muted text-[11px] font-semibold text-foreground">
             {(data.workspace.name || "G").slice(0, 1).toUpperCase()}
@@ -2146,11 +2224,11 @@ function Editor({
     },
   };
   const statusDot = {
-    Saved: "bg-foreground/55",
-    Saving: "animate-pulse bg-foreground/35",
-    Unsaved: "bg-foreground/25",
-    Error: "bg-destructive",
-  }[status] || "bg-foreground/25";
+    Saved: "status-dot status-saved",
+    Saving: "status-dot status-saving animate-pulse",
+    Unsaved: "status-dot status-unsaved",
+    Error: "status-dot status-error",
+  }[status] || "status-dot status-unsaved";
   const panelVariant = inspectorPanels.has(panel) ? "inspector" : "modal";
   const pagesActive = pageRailPanels.has(panel);
   return (
@@ -2158,8 +2236,8 @@ function Editor({
       className="editor flex h-dvh flex-col overflow-hidden bg-background text-foreground"
       style={accentStyles(p?.accent || "#0166ff") as React.CSSProperties}
     >
-      <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background px-3 dark:bg-[var(--surface)] dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.035)] sm:px-4 lg:px-5">
-        <div className="flex min-w-0 items-center gap-2">
+      <header className="editor-header flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background px-3 dark:bg-[var(--surface)] dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.035)] sm:px-4 lg:px-5">
+        <div className="editor-header-brand flex min-w-0 items-center gap-2">
           <Brand
             workspace={data.workspace}
             navigate={async (url) => {
@@ -2174,9 +2252,9 @@ function Editor({
             onNew={() => setPanel("Create product")}
           />
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="editor-header-actions flex shrink-0 items-center gap-1">
           <span
-            className="mr-1 hidden items-center gap-2 px-1 text-[11px] font-medium text-muted-foreground sm:inline-flex"
+            className="editor-status mr-1 hidden items-center gap-2 px-1 text-[11px] font-medium text-muted-foreground sm:inline-flex"
             role="status"
             aria-live="polite"
           >
@@ -2217,7 +2295,7 @@ function Editor({
             icon="bars"
             label="Open editor navigation"
             variant="ghost"
-            className="size-8 md:hidden"
+            className="size-8 lg:hidden"
             aria-haspopup="dialog"
             aria-expanded={mobile}
             onClick={() => setMobile(true)}
@@ -2227,7 +2305,7 @@ function Editor({
       <div className="flex min-h-0 flex-1">
         <nav
           aria-label="Editor tools"
-          className="hidden w-12 shrink-0 flex-col items-center gap-1 overflow-y-auto border-r border-border/80 bg-muted/20 px-2 py-3 dark:bg-[var(--surface)] md:flex"
+          className="editor-rail hidden w-12 shrink-0 flex-col items-center gap-1 overflow-y-auto border-r border-border/80 bg-muted/20 px-2 py-3 dark:bg-[var(--surface)] lg:flex"
         >
           <EIconButton
             icon="file-lines"
@@ -2303,12 +2381,12 @@ function Editor({
             />
           </div>
         </nav>
-        <aside className="hidden h-full w-60 shrink-0 border-r border-border/80 bg-muted/20 dark:bg-[var(--surface)] md:flex md:flex-col">
+        <aside className="editor-sidebar hidden h-full w-60 shrink-0 border-r border-border/80 bg-muted/20 dark:bg-[var(--surface)] lg:flex lg:flex-col">
           {sidebar}
         </aside>
         <main
           className={cn(
-            "flex h-full min-w-0 flex-1 flex-col overflow-hidden transition-[padding] duration-200",
+            "editor-main flex h-full min-w-0 flex-1 flex-col overflow-hidden transition-[padding] duration-300",
             panelVariant === "inspector" && "xl:pr-[380px]",
           )}
           id="main"
@@ -2318,7 +2396,7 @@ function Editor({
             onValueChange={setMode}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="flex min-h-12 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-background px-3 py-1.5 dark:bg-[var(--surface)] sm:px-4 md:px-5">
+            <div className="editor-toolbar flex min-h-12 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-background px-3 py-1.5 dark:bg-[var(--surface)] sm:px-4 md:px-5">
               <div className="flex min-w-0 items-center gap-1.5 text-[12px]">
                 <Icon
                   value={page?.icon || "file-lines"}
@@ -2460,14 +2538,12 @@ function Editor({
             value="Visual"
             className="m-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
           >
-            <div
-              className="mx-auto w-full max-w-[800px] px-6 pb-24 pt-14 sm:px-10 sm:pt-16"
-              {...imageHandlers}
-            >
-              {p && page ? (
-                <>
-                  <div className="mb-6 flex items-center justify-between gap-3">
-                    <span className="min-w-0 truncate text-[11px] text-muted-foreground">
+            <div className="editor-canvas">
+              <div className="editor-paper" {...imageHandlers}>
+                {p && page ? (
+                  <>
+                    <div className="editor-page-meta mb-6 flex items-center justify-between gap-3">
+                      <span className="min-w-0 truncate text-[11px] text-muted-foreground">
                       {p.name}
                       <span className="px-1.5 text-border">/</span>
                       {page.slug}
@@ -2573,20 +2649,19 @@ function Editor({
               ) : (
                 emptyState
               )}
+              </div>
             </div>
           </TabsContent>
           <TabsContent
             value="Preview"
             className="m-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
           >
-            <div
-              className="mx-auto w-full max-w-[800px] px-6 pb-24 pt-14 sm:px-10 sm:pt-16"
-              {...imageHandlers}
-            >
-              {p && page ? (
-                <>
-                  <div className="mb-6 flex items-center justify-between gap-3">
-                    <span className="min-w-0 truncate text-[11px] text-muted-foreground">
+            <div className="editor-canvas">
+              <div className="editor-paper" {...imageHandlers}>
+                {p && page ? (
+                  <>
+                    <div className="editor-page-meta mb-6 flex items-center justify-between gap-3">
+                      <span className="min-w-0 truncate text-[11px] text-muted-foreground">
                       {p.name}
                       <span className="px-1.5 text-border">/</span>
                       {page.slug}
@@ -2649,6 +2724,7 @@ function Editor({
               ) : (
                 emptyState
               )}
+              </div>
             </div>
           </TabsContent>
           <TabsContent

@@ -233,7 +233,9 @@ export function PanelDialog({
       <DialogContent
         showCloseButton={false}
         data-variant={variant}
-        overlayClassName={inspector ? "bg-transparent" : undefined}
+        overlayClassName={
+          inspector ? "bg-transparent inspector-overlay" : undefined
+        }
         className={cn(
           "flex flex-col gap-0 overflow-hidden p-0",
           inspector
