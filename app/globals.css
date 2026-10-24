@@ -5933,20 +5933,9 @@ body {
   font-weight: 620;
 }
 
-.reader .prose a {
-  color: var(--accent-text);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--accent) 30%, transparent);
-  text-underline-offset: 0.18em;
-  text-decoration-thickness: 1px;
-  transition:
-    color 150ms ease,
-    text-decoration-color 150ms ease;
-}
-
-.reader .prose a:hover {
-  text-decoration-color: var(--accent);
-}
+/* Link underline treatment is owned by the product's `data-link-style`
+   rules above. Keeping a second text-decoration here made the static
+   underline disappear as the animated background underline grew. */
 
 .reader .prose ul,
 .reader .prose ol {
@@ -6487,23 +6476,20 @@ body {
 
 .reader .toc-links > a {
   display: block;
-  margin-left: -1px;
   padding: 0.35rem 0 0.35rem 0.75rem;
-  border-left: 1.5px solid transparent;
   color: var(--muted);
   font-size: 0.75rem;
   line-height: 1.4;
-  transition:
-    color 160ms ease,
-    border-color 160ms ease;
+  transition: color 160ms ease;
 }
 
 .reader .toc-links > a:hover {
   color: var(--text);
 }
 
+/* The animated .toc-fill rail is the only active marker. An extra
+   border-left on the active link used to animate alongside it. */
 .reader .toc-links > a.active {
-  border-left-color: var(--accent);
   color: var(--text);
   font-weight: 500;
 }
@@ -8265,6 +8251,13 @@ body {
     border-left: 1px solid var(--line);
     color: var(--muted);
     font-size: 0.73rem;
+    background-image: none;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+
+  .reader .mobile-toc a:hover {
+    color: var(--text);
   }
 
   .reader .mobile-toc a:first-of-type {
